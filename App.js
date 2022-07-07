@@ -7,159 +7,93 @@
  */
 
 import React, {Component} from 'react';
-import base64 from 'react-native-base64';
-import {
-  SafeAreaView,
-  View,
-  Image,
-  TextInput,
-  StyleSheet,
-  Button,
-  ActivityIndicator,
-  Keyboard,
-} from 'react-native';
+import {SafeAreaView, View, StyleSheet, Animated, Text} from 'react-native';
 
-import ListFruits from './components/ListFruits';
+const CIRCLE_SIZE = 250;
+const RADIUS = ((CIRCLE_SIZE / 2) * 80) / 100;
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      isFetchingFruits: true,
-      newFruit: '',
-      keyboardStatus: undefined,
-      fruits: [],
-      value: ''
+      timeStamp: '',
     };
-    this.myRef = React.createRef();
-    this.controller = new AbortController();
-    this.unMounted = false;
+    this.hour = Array.from({
+      length: 12,
+    });
+    this.timerId = 0;
   }
 
-  componentDidMount() {
-    this.handleFetchListFruits();
-
-    this.keyboardDidShowSubscription = Keyboard.addListener(
-      'keyboardDidShow',
-      () => {
-        this.setState({keyboardStatus: true});
-      },
-    );
-    this.keyboardDidHideSubscription = Keyboard.addListener(
-      'keyboardDidHide',
-      () => {
-        this.setState({keyboardStatus: false});
-      },
-    );
-  }
-
-  componentWillUnmount() {
-    this.keyboardDidShowSubscription.remove();
-    this.keyboardDidHideSubscription.remove();
-    this.controller.abort();
-    this.unMounted = true;
-  }
-
-  handleFetchListFruits = () => {
-    const {signal} = this.controller;
-    // if(this.unMounted) return;
-    fetch('https://api.github.com/repos/minhnguyenit14/mockend/readme', {
-      signal,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        const encodeString = String(data.content.replace(/\n/g, ''));
-        this.decodeString(encodeString);
-      })
-      .catch((error) => console.log(error))
-      .finally(() => {
-        this.setState({isFetchingFruits: false});
-      });
-  };
-
-  decodeString = (encText) => {
-    const data = base64.decode(encText);
-    const result = JSON.parse(data);
+  getTimeStamp = () => {
+    const dateInstance = new Date();
+    const hour =
+      dateInstance.getHours() < 10
+        ? `0${dateInstance.getHours()}`
+        : `${dateInstance.getHours()}`;
+    const minute =
+      dateInstance.getMinutes() < 10
+        ? `0${dateInstance.getMinutes()}`
+        : `${dateInstance.getMinutes()}`;
+    const second =
+      dateInstance.getSeconds() < 10
+        ? `0${dateInstance.getSeconds()}`
+        : `${dateInstance.getSeconds()}`;
+    const timeStampNow = `${hour}:${minute}:${second}`;
     this.setState({
-      fruits: result.fruits,
+      timeStamp: timeStampNow,
     });
   };
 
-  handleGetNewFruit = (value) => {
-    this.setState({
-      newFruit: value.trim(),
-    });
+  componentDidMount = () => {
+    this.timerId = setInterval(() => {
+      this.getTimeStamp();
+    }, 1000);
   };
 
-  handleAddFruit = () => {
-    const colors = ['blue', 'gray', 'orange', 'pink', 'purple'];
-    let newArrayFruits = [...this.state.fruits];
-    newArrayFruits.unshift({
-      name: this.state.newFruit,
-      imageUrl:
-        'https://anhducdigital.vn/media/product/13251_iphone_13_pro_max_128gb_sierra_blue_3.webp',
-      color: colors[Math.floor(Math.random() * colors.length)],
-    });
-
-    this.setState({
-      newFruit: '',
-      fruits: newArrayFruits,
-    });
-
-    Keyboard.dismiss();
-    // this.myRef.current.clear();
-  };
-
-  handleRemoveFruit = (index) => {
-    let newArrayFruits = [...this.state.fruits];
-    newArrayFruits.splice(index, 1);
-    this.setState({
-      fruits: newArrayFruits,
-    });
+  componentWillUnmount = () => {
+    clearInterval(this.timerId);
   };
 
   render() {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.avatarContainer}>
-          <Image
-            style={styles.avatar}
-            source={{
-              uri: 'https://static.fullstack.edu.vn/static/media/f8-icon.7ad2b161d5e80c87e516.png',
-            }}
-          />
-        </View>
-        <View style={styles.addFruitInput}>
-          <TextInput
-            style={styles.addFruitText}
-            onChangeText={this.handleGetNewFruit}
-            placeholder="Add fruit"
-            value={this.state.newFruit}
-            // ref={this.myRef}
-          />
-
-          <Button
-            onPress={this.handleAddFruit}
-            disabled={!this.state.newFruit.trim()}
-            title="Add"
-            color="#f05123"
-          />
-        </View>
-        <ListFruits
-          fruits={this.state.fruits}
-          keyboardStatus={this.state.keyboardStatus}
-          handleRemoveFruit={this.handleRemoveFruit}
-        />
-        {this.state.isFetchingFruits && (
-          <View
-            style={{
-              ...StyleSheet.absoluteFillObject,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
-            <ActivityIndicator size="large" color="#f05123" />
+        <Animated.View style={styles.clockContainer}>
+          <View style={styles.clockInner}>
+            {this.hour.map((x, i) => {
+              const angleThisItemDegree = 30 * i;
+              const itemSize = 12;
+              const angleThisItemRadius =
+                (angleThisItemDegree * Math.PI) / 180 - Math.PI / 2;
+              const coordinateHourStyle = {
+                left:
+                  RADIUS * Math.cos(angleThisItemRadius) + RADIUS - itemSize,
+                top: RADIUS * Math.sin(angleThisItemRadius) + RADIUS - itemSize,
+                transform: [{rotate: `${angleThisItemDegree}deg`}],
+              };
+              return (
+                <View
+                  key={i}
+                  style={[styles.hourStep, coordinateHourStyle]}></View>
+              );
+            })}
           </View>
-        )}
+          <Animated.View style={styles.centerClock}>
+            <Animated.View style={styles.wrapHand}>
+              <View style={styles.hourHand}></View>
+            </Animated.View>
+
+            <Animated.View style={styles.wrapHand}>
+              <View style={styles.minuteHand}></View>
+            </Animated.View>
+
+            <Animated.View style={styles.wrapHand}>
+              <View style={styles.secondHand}></View>
+            </Animated.View>
+          </Animated.View>
+        </Animated.View>
+        <View style={styles.alarmPicker}>
+          <Text>{this.state.timeStamp}</Text>
+        </View>
       </SafeAreaView>
     );
   }
@@ -168,25 +102,86 @@ class App extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  avatarContainer: {
+    justifyContent: 'space-around',
     alignItems: 'center',
   },
-  avatar: {
-    width: 100,
-    height: 100,
-    marginVertical: 10,
+  clockContainer: {
+    width: CIRCLE_SIZE,
+    height: CIRCLE_SIZE,
+    borderRadius: 999,
+    borderWidth: 10,
+    borderColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  addFruitInput: {
-    flexDirection: 'row',
-    marginVertical: 4,
+  clockInner: {
+    width: '80%',
+    height: '80%',
+    borderRadius: 999,
   },
-  addFruitText: {
-    marginRight: 'auto',
-    width: '100%',
-    padding: 10,
-    fontSize: 16,
-    backgroundColor: '#f6f3f3',
+  centerClock: {
+    position: 'absolute',
+    backgroundColor: '#000',
+    width: 10,
+    height: 10,
+    borderRadius: 999,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  hourStep: {
+    position: 'absolute',
+    backgroundColor: '#000',
+    width: 4,
+    height: 10,
+    borderRadius: 8,
+  },
+  wrapHand: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  hourHand: {
+    position: 'absolute',
+    backgroundColor: '#000',
+    width: 6,
+    height: CIRCLE_SIZE / 3,
+    borderRadius: 8,
+    transform: [
+      {
+        translateY: CIRCLE_SIZE / 8,
+      },
+    ],
+  },
+  // minuteHand: {
+  //   position: 'absolute',
+  //   backgroundColor: '#000',
+  //   width: 3,
+  //   height: CIRCLE_SIZE / 3,
+  //   borderRadius: 8,
+  //   transform: [
+  //     {
+  //       translateY: CIRCLE_SIZE / 8,
+  //     },
+  //   ],
+  // },
+  // secondHand: {
+  //   position: 'absolute',
+  //   backgroundColor: 'red',
+  //   width: 1,
+  //   height: CIRCLE_SIZE / 3,
+  //   borderRadius: 8,
+  //   transform: [
+  //     {
+  //       translateY: CIRCLE_SIZE / 8,
+  //     },
+  //   ],
+  // },
+  alarmPicker: {
+    backgroundColor: 'pink',
+    width: '50%',
+    height: 70,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
   },
 });
 
