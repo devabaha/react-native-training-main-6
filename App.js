@@ -7,93 +7,204 @@
  */
 
 import React, {Component} from 'react';
-import {SafeAreaView, View, StyleSheet, Animated, Text} from 'react-native';
+import {
+  SafeAreaView,
+  View,
+  StyleSheet,
+  Animated,
+  Text,
+  Easing,
+} from 'react-native';
+import DigitalClock from './src/DigitalClock';
 
 const CIRCLE_SIZE = 250;
 const RADIUS = ((CIRCLE_SIZE / 2) * 80) / 100;
-
+const hoursToMilliseconds = 3600000;
+const minutesToMilliseconds = 60000;
+const secondsToMilliseconds = 1000;
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      timeStamp: '',
+      rotationHoursHandAnimatedValue: new Animated.Value(0),
+      rotationMinutesHandAnimatedValue: new Animated.Value(0),
+      rotateSecondsHandAnimatedValue: new Animated.Value(0),
+      initTime: {
+        hoursInit: 0,
+        minutesInit: 0,
+        secondsInit: 0,
+      },
     };
     this.hour = Array.from({
       length: 12,
     });
-    this.timerId = 0;
   }
 
-  getTimeStamp = () => {
+  getTimeInit = () => {
     const dateInstance = new Date();
-    const hour =
-      dateInstance.getHours() < 10
-        ? `0${dateInstance.getHours()}`
-        : `${dateInstance.getHours()}`;
-    const minute =
-      dateInstance.getMinutes() < 10
-        ? `0${dateInstance.getMinutes()}`
-        : `${dateInstance.getMinutes()}`;
-    const second =
-      dateInstance.getSeconds() < 10
-        ? `0${dateInstance.getSeconds()}`
-        : `${dateInstance.getSeconds()}`;
-    const timeStampNow = `${hour}:${minute}:${second}`;
     this.setState({
-      timeStamp: timeStampNow,
+      initTime: {
+        hoursInit: dateInstance.getHours(),
+        minutesInit: dateInstance.getMinutes(),
+        secondsInit: dateInstance.getSeconds(),
+      },
     });
   };
 
-  componentDidMount = () => {
-    this.timerId = setInterval(() => {
-      this.getTimeStamp();
-    }, 1000);
-  };
+  // rotateHandClock() {
+  //   Animated.parallel([
 
-  componentWillUnmount = () => {
-    clearInterval(this.timerId);
-  };
+  //   ])
+  // }
+
+  rotateHoursHand() {
+    Animated.timing(this.state.rotationHoursHandAnimatedValue, {
+      toValue: 1,
+      duration: hoursToMilliseconds,
+      useNativeDriver: true,
+      easing: Easing.linear,
+    }).start(() => {
+      this.setState({
+        rotationHoursHandAnimatedValue: new Animated.Value(0),
+      });
+      this.rotateHoursHand();
+    });
+  }
+
+  rotateMinutesHand() {
+    Animated.timing(this.state.rotationMinutesHandAnimatedValue, {
+      toValue: 1,
+      duration: 60 * minutesToMilliseconds,
+      useNativeDriver: true,
+      easing: Easing.linear,
+    }).start(() => {
+      this.setState({
+        rotationMinutesHandAnimatedValue: new Animated.Value(0),
+      });
+      this.rotateMinutesHand();
+    });
+  }
+
+  rotateSecondsHand() {
+    Animated.timing(this.state.rotateSecondsHandAnimatedValue, {
+      toValue: 1,
+      duration: 60 * secondsToMilliseconds,
+      useNativeDriver: true,
+      easing: Easing.linear,
+    }).start(() => {
+      this.setState({
+        rotateSecondsHandAnimatedValue: new Animated.Value(0),
+      });
+      this.rotateSecondsHand();
+    });
+  }
+
+  componentDidMount() {
+    this.getTimeInit();
+    this.rotateHoursHand();
+    this.rotateMinutesHand();
+    this.rotateSecondsHand();
+  }
 
   render() {
     return (
       <SafeAreaView style={styles.container}>
         <Animated.View style={styles.clockContainer}>
           <View style={styles.clockInner}>
-            {this.hour.map((x, i) => {
-              const angleThisItemDegree = 30 * i;
-              const itemSize = 12;
-              const angleThisItemRadius =
-                (angleThisItemDegree * Math.PI) / 180 - Math.PI / 2;
+            {this.hour.map((_, i) => {
+              const angleThisItemRadius = (Math.PI / 6) * i;
+              const itemSize = 14;
               const coordinateHourStyle = {
                 left:
-                  RADIUS * Math.cos(angleThisItemRadius) + RADIUS - itemSize,
-                top: RADIUS * Math.sin(angleThisItemRadius) + RADIUS - itemSize,
-                transform: [{rotate: `${angleThisItemDegree}deg`}],
+                  RADIUS * Math.cos(angleThisItemRadius - Math.PI / 2) +
+                  RADIUS -
+                  itemSize,
+                top:
+                  RADIUS * Math.sin(angleThisItemRadius - Math.PI / 2) +
+                  RADIUS -
+                  itemSize,
               };
               return (
-                <View
-                  key={i}
-                  style={[styles.hourStep, coordinateHourStyle]}></View>
+                <View key={i} style={[styles.hourStep, coordinateHourStyle]}>
+                  <Text>{i === 0 ? 12 : i}</Text>
+                </View>
               );
             })}
           </View>
-          <Animated.View style={styles.centerClock}>
-            <Animated.View style={styles.wrapHand}>
-              <View style={styles.hourHand}></View>
+          <View style={styles.centerClock}>
+            <Animated.View
+              style={[
+                styles.wrapHand,
+                styles.wrapHoursHand,
+                {
+                  transform: [
+                    {
+                      rotate:
+                        this.state.rotationHoursHandAnimatedValue.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [
+                            `${this.state.initTime.hoursInit * 30}deg`,
+                            `${this.state.initTime.hoursInit * 30 + 360}deg`,
+                          ],
+                        }),
+                    },
+                  ],
+                },
+              ]}>
+              <View style={[styles.hoursHand]}></View>
             </Animated.View>
 
-            <Animated.View style={styles.wrapHand}>
-              <View style={styles.minuteHand}></View>
+            <Animated.View
+              style={[
+                styles.wrapHand,
+                styles.wrapMinutesHand,
+                {
+                  transform: [
+                    {
+                      rotate:
+                        this.state.rotationMinutesHandAnimatedValue.interpolate(
+                          {
+                            inputRange: [0, 1],
+                            outputRange: [
+                              `${this.state.initTime.minutesInit * 6}deg`,
+                              `${this.state.initTime.minutesInit * 6 + 360}deg`,
+                            ],
+                          },
+                        ),
+                    },
+                  ],
+                },
+              ]}>
+              <View style={styles.minutesHand}></View>
             </Animated.View>
 
-            <Animated.View style={styles.wrapHand}>
-              <View style={styles.secondHand}></View>
+            <Animated.View
+              style={[
+                styles.wrapHand,
+                styles.wrapSecondsHand,
+                {
+                  transform: [
+                    {
+                      rotate:
+                        this.state.rotateSecondsHandAnimatedValue.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [
+                            `${this.state.initTime.secondsInit * 6}deg`,
+                            `${this.state.initTime.secondsInit * 6 + 360}deg`,
+                          ],
+                        }),
+                    },
+                  ],
+                },
+              ]}>
+              <View style={styles.secondsHand}></View>
             </Animated.View>
-          </Animated.View>
+
+            <View style={styles.centerClock}></View>
+          </View>
         </Animated.View>
-        <View style={styles.alarmPicker}>
-          <Text>{this.state.timeStamp}</Text>
-        </View>
+
+        <DigitalClock />
       </SafeAreaView>
     );
   }
@@ -130,59 +241,47 @@ const styles = StyleSheet.create({
   },
   hourStep: {
     position: 'absolute',
-    backgroundColor: '#000',
-    width: 4,
-    height: 10,
-    borderRadius: 8,
   },
   wrapHand: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  hourHand: {
     position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+  wrapHoursHand: {
+    height: CIRCLE_SIZE / 3,
+  },
+  wrapMinutesHand: {
+    height: CIRCLE_SIZE / 2,
+  },
+  wrapSecondsHand: {
+    height: CIRCLE_SIZE / 1.6,
+  },
+  hoursHand: {
     backgroundColor: '#000',
     width: 6,
-    height: CIRCLE_SIZE / 3,
-    borderRadius: 8,
-    transform: [
-      {
-        translateY: CIRCLE_SIZE / 8,
-      },
-    ],
-  },
-  // minuteHand: {
-  //   position: 'absolute',
-  //   backgroundColor: '#000',
-  //   width: 3,
-  //   height: CIRCLE_SIZE / 3,
-  //   borderRadius: 8,
-  //   transform: [
-  //     {
-  //       translateY: CIRCLE_SIZE / 8,
-  //     },
-  //   ],
-  // },
-  // secondHand: {
-  //   position: 'absolute',
-  //   backgroundColor: 'red',
-  //   width: 1,
-  //   height: CIRCLE_SIZE / 3,
-  //   borderRadius: 8,
-  //   transform: [
-  //     {
-  //       translateY: CIRCLE_SIZE / 8,
-  //     },
-  //   ],
-  // },
-  alarmPicker: {
-    backgroundColor: 'pink',
-    width: '50%',
-    height: 70,
-    justifyContent: 'center',
-    alignItems: 'center',
+    height: '60%',
     borderRadius: 8,
   },
+  minutesHand: {
+    backgroundColor: '#000',
+    width: 3,
+    height: '60%',
+    borderRadius: 8,
+  },
+  secondsHand: {
+    backgroundColor: 'red',
+    width: 1,
+    height: '60%',
+    borderRadius: 8,
+  },
+  // timeInitBlock: {
+  //   backgroundColor: 'pink',
+  //   width: '50%',
+  //   height: 70,
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  //   borderRadius: 8,
+  // },
 });
 
 export default App;
