@@ -51,62 +51,57 @@ class App extends Component {
     });
   };
 
-  // rotateHandClock() {
-  //   Animated.parallel([
-
-  //   ])
-  // }
-
-  rotateHoursHand() {
-    Animated.timing(this.state.rotationHoursHandAnimatedValue, {
-      toValue: 1,
-      duration: hoursToMilliseconds,
-      useNativeDriver: true,
-      easing: Easing.linear,
-    }).start(() => {
-      this.setState({
-        rotationHoursHandAnimatedValue: new Animated.Value(0),
-      });
-      this.rotateHoursHand();
-    });
-  }
-
-  rotateMinutesHand() {
-    Animated.timing(this.state.rotationMinutesHandAnimatedValue, {
-      toValue: 1,
-      duration: 60 * minutesToMilliseconds,
-      useNativeDriver: true,
-      easing: Easing.linear,
-    }).start(() => {
-      this.setState({
-        rotationMinutesHandAnimatedValue: new Animated.Value(0),
-      });
-      this.rotateMinutesHand();
-    });
-  }
-
-  rotateSecondsHand() {
-    Animated.timing(this.state.rotateSecondsHandAnimatedValue, {
-      toValue: 1,
-      duration: 60 * secondsToMilliseconds,
-      useNativeDriver: true,
-      easing: Easing.linear,
-    }).start(() => {
-      this.setState({
-        rotateSecondsHandAnimatedValue: new Animated.Value(0),
-      });
-      this.rotateSecondsHand();
+  rotateHandClock() {
+    Animated.parallel([
+      Animated.timing(this.state.rotationHoursHandAnimatedValue, {
+        toValue: 1,
+        duration: hoursToMilliseconds,
+        useNativeDriver: true,
+        easing: Easing.linear,
+      }),
+      Animated.timing(this.state.rotationMinutesHandAnimatedValue, {
+        toValue: 1,
+        duration: 60 * minutesToMilliseconds,
+        useNativeDriver: true,
+        easing: Easing.linear,
+      }),
+      Animated.timing(this.state.rotateSecondsHandAnimatedValue, {
+        toValue: 1,
+        duration: 60 * secondsToMilliseconds,
+        useNativeDriver: true,
+        easing: Easing.linear,
+      }),
+    ]).start(() => {
+      Animated.parallel([
+        Animated.timing(this.state.rotationHoursHandAnimatedValue, {
+          toValue: 0,
+          duration: hoursToMilliseconds,
+          useNativeDriver: true,
+          easing: Easing.linear,
+        }),
+        Animated.timing(this.state.rotationMinutesHandAnimatedValue, {
+          toValue: 0,
+          duration: 60 * minutesToMilliseconds,
+          useNativeDriver: true,
+          easing: Easing.linear,
+        }),
+        Animated.timing(this.state.rotateSecondsHandAnimatedValue, {
+          toValue: 0,
+          duration: 60 * secondsToMilliseconds,
+          useNativeDriver: true,
+          easing: Easing.linear,
+        }),
+      ]).start();
     });
   }
 
   componentDidMount() {
     this.getTimeInit();
-    this.rotateHoursHand();
-    this.rotateMinutesHand();
-    this.rotateSecondsHand();
+    this.rotateHandClock();
   }
 
   render() {
+    console.log('re-render App');
     return (
       <SafeAreaView style={styles.container}>
         <Animated.View style={styles.clockContainer}>
@@ -254,7 +249,7 @@ const styles = StyleSheet.create({
     height: CIRCLE_SIZE / 2,
   },
   wrapSecondsHand: {
-    height: CIRCLE_SIZE / 1.6,
+    height: CIRCLE_SIZE / 1.5,
   },
   hoursHand: {
     backgroundColor: '#000',
@@ -274,14 +269,6 @@ const styles = StyleSheet.create({
     height: '60%',
     borderRadius: 8,
   },
-  // timeInitBlock: {
-  //   backgroundColor: 'pink',
-  //   width: '50%',
-  //   height: 70,
-  //   justifyContent: 'center',
-  //   alignItems: 'center',
-  //   borderRadius: 8,
-  // },
 });
 
 export default App;
