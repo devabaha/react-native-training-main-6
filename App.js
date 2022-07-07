@@ -13,7 +13,10 @@ import {
   StyleSheet,
   Animated,
   Text,
+  TextInput,
   Easing,
+  TouchableOpacity,
+  Button,
 } from 'react-native';
 import DigitalClock from './src/DigitalClock';
 
@@ -34,6 +37,7 @@ class App extends Component {
         minutesInit: 0,
         secondsInit: 0,
       },
+      timeInput: '',
     };
     this.hour = Array.from({
       length: 12,
@@ -51,11 +55,55 @@ class App extends Component {
     });
   };
 
+  rotateHoursHand() {
+    Animated.timing(this.state.rotationHoursHandAnimatedValue, {
+      toValue: 1,
+      // duration: 12 * hoursToMilliseconds,
+      duration: 10000,
+      useNativeDriver: true,
+      easing: Easing.linear,
+    }).start(() => {
+      this.setState({
+        rotationHoursHandAnimatedValue: new Animated.Value(0),
+      });
+      this.rotateHoursHand();
+    });
+  }
+
+  rotateMinutesHand() {
+    Animated.timing(this.state.rotationMinutesHandAnimatedValue, {
+      toValue: 1,
+      duration: 60 * minutesToMilliseconds,
+      useNativeDriver: true,
+      easing: Easing.linear,
+    }).start(() => {
+      this.setState({
+        rotationMinutesHandAnimatedValue: new Animated.Value(0),
+      });
+      this.rotateMinutesHand();
+    });
+  }
+
+  rotateSecondsHand() {
+    Animated.timing(this.state.rotateSecondsHandAnimatedValue, {
+      toValue: 1,
+      duration: 60 * secondsToMilliseconds,
+      useNativeDriver: true,
+      easing: Easing.linear,
+    }).start(() => {
+      this.setState({
+        rotateSecondsHandAnimatedValue: new Animated.Value(0),
+      });
+      this.rotateSecondsHand();
+    });
+  }
+
   rotateHandClock() {
     Animated.parallel([
       Animated.timing(this.state.rotationHoursHandAnimatedValue, {
         toValue: 1,
-        duration: hoursToMilliseconds,
+        // duration: 12 * hoursToMilliseconds,
+        duration: 10000,
         useNativeDriver: true,
         easing: Easing.linear,
       }),
@@ -71,37 +119,18 @@ class App extends Component {
         useNativeDriver: true,
         easing: Easing.linear,
       }),
-    ]).start(() => {
-      Animated.parallel([
-        Animated.timing(this.state.rotationHoursHandAnimatedValue, {
-          toValue: 0,
-          duration: hoursToMilliseconds,
-          useNativeDriver: true,
-          easing: Easing.linear,
-        }),
-        Animated.timing(this.state.rotationMinutesHandAnimatedValue, {
-          toValue: 0,
-          duration: 60 * minutesToMilliseconds,
-          useNativeDriver: true,
-          easing: Easing.linear,
-        }),
-        Animated.timing(this.state.rotateSecondsHandAnimatedValue, {
-          toValue: 0,
-          duration: 60 * secondsToMilliseconds,
-          useNativeDriver: true,
-          easing: Easing.linear,
-        }),
-      ]).start();
-    });
+    ]).start();
   }
 
   componentDidMount() {
     this.getTimeInit();
-    this.rotateHandClock();
+    this.rotateHoursHand();
+    this.rotateMinutesHand();
+    this.rotateSecondsHand();
+    // this.rotateHandClock();
   }
 
   render() {
-    console.log('re-render App');
     return (
       <SafeAreaView style={styles.container}>
         <Animated.View style={styles.clockContainer}>
@@ -126,6 +155,7 @@ class App extends Component {
               );
             })}
           </View>
+
           <View style={styles.centerClock}>
             <Animated.View
               style={[
@@ -138,8 +168,16 @@ class App extends Component {
                         this.state.rotationHoursHandAnimatedValue.interpolate({
                           inputRange: [0, 1],
                           outputRange: [
-                            `${this.state.initTime.hoursInit * 30}deg`,
-                            `${this.state.initTime.hoursInit * 30 + 360}deg`,
+                            `${
+                              this.state.initTime.hoursInit * 30 +
+                              30 * ((this.state.initTime.minutesInit * 6) / 360)
+                            }deg`,
+                            `${
+                              this.state.initTime.hoursInit * 30 +
+                              30 *
+                                ((this.state.initTime.minutesInit * 6) / 360) +
+                              360
+                            }deg`,
                           ],
                         }),
                     },
@@ -199,6 +237,30 @@ class App extends Component {
           </View>
         </Animated.View>
 
+        <View style={styles.timeInputBlock}>
+          <TextInput
+            placeholder="14:06:00"
+            value={this.state.timeInput}
+            onChangeText={(text) =>
+              this.setState({
+                timeInput: text,
+              })
+            }
+            style={styles.timeInputType}
+          />
+          <View style={styles.timeInputConfirm}>
+            <Button
+              title="Set"
+              color="#b03b60"
+              onPress={() => {
+                this.setState({
+                  timeInput: '',
+                });
+              }}
+            />
+          </View>
+        </View>
+
         <DigitalClock />
       </SafeAreaView>
     );
@@ -216,9 +278,10 @@ const styles = StyleSheet.create({
     height: CIRCLE_SIZE,
     borderRadius: 999,
     borderWidth: 10,
-    borderColor: '#000',
+    borderColor: '#ee9599',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#fbe4d7',
   },
   clockInner: {
     width: '80%',
@@ -249,7 +312,7 @@ const styles = StyleSheet.create({
     height: CIRCLE_SIZE / 2,
   },
   wrapSecondsHand: {
-    height: CIRCLE_SIZE / 1.5,
+    height: CIRCLE_SIZE / 1.6,
   },
   hoursHand: {
     backgroundColor: '#000',
@@ -264,10 +327,35 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   secondsHand: {
-    backgroundColor: 'red',
+    backgroundColor: '#b03b60',
     width: 1,
     height: '60%',
     borderRadius: 8,
+  },
+  timeInputBlock: {
+    width: '60%',
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  timeInputType: {
+    flex: 1,
+    padding: 12,
+    height: '100%',
+    backgroundColor: '#ffe0ce',
+    fontSize: 24,
+    borderRadius: 4,
+    fontWeight: '600',
+  },
+  timeInputConfirm: {
+    marginLeft: 8,
+    height: '100%',
+    justifyContent: 'center',
+    backgroundColor: '#ffe0ce',
+    borderRadius: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
   },
 });
 

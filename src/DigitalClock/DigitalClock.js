@@ -37,7 +37,7 @@ class DigitalClock extends Component {
   componentWillUnmount = () => {
     clearInterval(this.timerId);
   };
-  
+
   render() {
     return (
       <View style={styles.container}>
@@ -49,12 +49,12 @@ class DigitalClock extends Component {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'pink',
-    width: '50%',
-    height: 70,
+    backgroundColor: '#ee9599',
+    width: '60%',
+    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 8,
+    borderRadius: 4,
   },
 });
 
