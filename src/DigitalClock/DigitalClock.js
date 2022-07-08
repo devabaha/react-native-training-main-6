@@ -23,14 +23,15 @@ class DigitalClock extends Component {
         ? `0${dateInstance.getSeconds()}`
         : `${dateInstance.getSeconds()}`;
     const timeStampNow = `${hour}:${minute}:${second}`;
-    this.setState({
-      timeStamp: timeStampNow,
-    });
+    return timeStampNow;
   };
 
   componentDidMount = () => {
     this.timerId = setInterval(() => {
-      this.getTimeStamp();
+      const timeStampNow = this.getTimeStamp();
+      this.setState({
+        timeStamp: timeStampNow,
+      });
     }, 1000);
   };
 
