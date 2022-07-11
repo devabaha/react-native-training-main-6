@@ -4,6 +4,7 @@ import {View, Text, StyleSheet} from 'react-native';
 class DigitalClock extends Component {
   state = {
     timeStamp: '',
+    timeStampNotSeconds: '',
   };
 
   timerId = 0;
@@ -23,14 +24,27 @@ class DigitalClock extends Component {
         ? `0${dateInstance.getSeconds()}`
         : `${dateInstance.getSeconds()}`;
     const timeStampNow = `${hour}:${minute}:${second}`;
-    return timeStampNow;
+    const timeStampNotSeconds = `${hour}:${minute}`;
+    return [timeStampNow, timeStampNotSeconds];
   };
 
   componentDidMount = () => {
+    if (
+      this.props.timeInput !== '' &&
+      this.state.timeStampNotSeconds !== '' &&
+      this.props.timeInput === this.state.timeStampNotSeconds
+    ) {
+      // this.props.handleSetWakeUp(true);
+      console.log(this.props.timeInput, '-', this.state.timeStampNotSeconds);
+    } else {
+      // this.props.handleSetWakeUp(false);
+      console.log('not match');
+    }
     this.timerId = setInterval(() => {
       const timeStampNow = this.getTimeStamp();
       this.setState({
-        timeStamp: timeStampNow,
+        timeStamp: timeStampNow[0],
+        timeStampNotSeconds: timeStampNow[1],
       });
     }, 1000);
   };
@@ -41,20 +55,24 @@ class DigitalClock extends Component {
 
   render() {
     return (
-      <View style={styles.container}>
-        <Text>{this.state.timeStamp}</Text>
-      </View>
+      <>
+        {!!this.state.timeStamp && (
+          <View style={styles.container}>
+            <Text style={styles.timeStamp}>{this.state.timeStamp}</Text>
+          </View>
+        )}
+      </>
     );
   }
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#ee9599',
-    width: '60%',
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: 'absolute',
+    bottom: '25%',
+    padding: 2,
+    borderWidth: 2,
+    borderColor: '#ee9599',
     borderRadius: 4,
   },
 });
