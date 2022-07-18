@@ -94,8 +94,8 @@ class AnalogClock extends Component {
     Animated.sequence([
       Animated.timing(this.state.analogClockAnimatedValue, {
         toValue: 1,
-        duration: 2000,
-        useNativeDriver: false,
+        duration: 60 * minutesToMilliseconds,
+        useNativeDriver: true,
         easing: Easing.bounce,
       }),
     ]).start(() => {
@@ -112,13 +112,14 @@ class AnalogClock extends Component {
     this.analogClockAnimate();
   };
 
-  handleSetWakeUp = (state) => {
-    this.setState({
-      isWakeUp: state,
-    });
+  handleSetWakeUp = (time) => {
+    if (this.state.timeInput !== time && this.state.timeInput !== false) {
+      return;
+    }
   };
 
   render() {
+    console.log(this.state.isWakeUp);
     return (
       <View style={styles.container}>
         <KeyboardAvoidingView
@@ -137,18 +138,6 @@ class AnalogClock extends Component {
                   },
                 ],
                 opacity: this.state.analogClockAnimatedValue,
-                backgroundColor:
-                  this.state.analogClockAnimatedValue.interpolate({
-                    inputRange: [0, 0.2, 0.4, 0.6, 0.8, 1],
-                    outputRange: [
-                      'rgba(255,255,0, 1)',
-                      'rgba(255,192,203, 1)',
-                      'rgb(99,71,255)',
-                      'rgb(255,99,71)',
-                      'rgba(136,104,163,1)',
-                      'rgba(250,242,238,1)',
-                    ],
-                  }),
               },
             ]}>
             <View style={styles.clockInner}>
@@ -264,10 +253,7 @@ class AnalogClock extends Component {
               <View style={styles.centerClock}></View>
             </View>
 
-            <DigitalClock
-              timeInput={this.state.timeInput}
-              handleSetWakeUp={this.handleSetWakeUp}
-            />
+            <DigitalClock handleSetWakeUp={this.handleSetWakeUp} />
           </Animated.View>
 
           <View style={styles.timeInputBlock}>

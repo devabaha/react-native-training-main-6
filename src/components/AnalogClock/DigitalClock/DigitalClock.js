@@ -29,17 +29,6 @@ class DigitalClock extends Component {
   };
 
   componentDidMount = () => {
-    if (
-      this.props.timeInput !== '' &&
-      this.state.timeStampNotSeconds !== '' &&
-      this.props.timeInput === this.state.timeStampNotSeconds
-    ) {
-      // this.props.handleSetWakeUp(true);
-      console.log(this.props.timeInput, '-', this.state.timeStampNotSeconds);
-    } else {
-      // this.props.handleSetWakeUp(false);
-      console.log('not match');
-    }
     this.timerId = setInterval(() => {
       const timeStampNow = this.getTimeStamp();
       this.setState({
@@ -52,6 +41,10 @@ class DigitalClock extends Component {
   componentWillUnmount = () => {
     clearInterval(this.timerId);
   };
+
+  componentDidUpdate() {
+    this.props.handleSetWakeUp(this.state.timeStampNotSeconds);
+  }
 
   render() {
     return (
