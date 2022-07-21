@@ -3,37 +3,14 @@ import {View, Text, StyleSheet} from 'react-native';
 
 class DigitalClock extends Component {
   state = {
-    timeStamp: '',
-    timeStampNotSeconds: '',
-  };
-
-  timerId = 0;
-
-  getTimeStamp = () => {
-    const dateInstance = new Date();
-    const hour =
-      dateInstance.getHours() < 10
-        ? `0${dateInstance.getHours()}`
-        : `${dateInstance.getHours()}`;
-    const minute =
-      dateInstance.getMinutes() < 10
-        ? `0${dateInstance.getMinutes()}`
-        : `${dateInstance.getMinutes()}`;
-    const second =
-      dateInstance.getSeconds() < 10
-        ? `0${dateInstance.getSeconds()}`
-        : `${dateInstance.getSeconds()}`;
-    const timeStampNow = `${hour}:${minute}:${second}`;
-    const timeStampNotSeconds = `${hour}:${minute}`;
-    return [timeStampNow, timeStampNotSeconds];
+    timeStamp: new Date().toLocaleTimeString(),
   };
 
   componentDidMount = () => {
     this.timerId = setInterval(() => {
-      const timeStampNow = this.getTimeStamp();
+      const timeStampNow = new Date().toLocaleTimeString();
       this.setState({
-        timeStamp: timeStampNow[0],
-        timeStampNotSeconds: timeStampNow[1],
+        timeStamp: timeStampNow,
       });
     }, 1000);
   };
@@ -41,10 +18,6 @@ class DigitalClock extends Component {
   componentWillUnmount = () => {
     clearInterval(this.timerId);
   };
-
-  componentDidUpdate() {
-    this.props.handleSetWakeUp(this.state.timeStampNotSeconds);
-  }
 
   render() {
     return (
@@ -64,9 +37,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: '25%',
     padding: 2,
-    borderWidth: 2,
-    borderColor: '#ee9599',
     borderRadius: 4,
+  },
+  timeStamp: {
+    color: '#b03b60',
+    fontWeight: '600',
+    fontSize: 16,
   },
 });
 
